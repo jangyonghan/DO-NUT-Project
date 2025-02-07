@@ -4,7 +4,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import Image from 'next/image';
 import HeartIcon from 'public/icons/heart.svg';
 import HertRedIcon from 'public/icons/heartRed.svg';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface HeartProps {
@@ -14,63 +14,70 @@ interface HeartProps {
 export default function Heart({ articleId }: HeartProps) {
   const queryClient = useQueryClient();
   const [isVisible, setIsVisible] = useState(false);
-  const [likedPost, setLikedPost] = useState(false);
   const { data } = useDetailCard({
     articleId: Number(articleId),
   });
 
-  useEffect(() => {
-    if (data?.isLiked !== undefined) {
-      setLikedPost(data.isLiked); // 서버 데이터에서 좋아요 상태 가져오기
-    }
-  }, [data?.isLiked]);
+  const isLiked = data?.isLiked ?? false;
+  const likeCount = data?.likeCount ?? 0;
 
-  // 좋아요 등록
-  const likeMutation = useMutation({
-    mutationFn: () => authAxiosInstance.post(`articles/${articleId}/like`),
-    onSuccess: () => {
-      setLikedPost(true);
-      // 필요시 쿼리 무효화나 업데이트 처리
-      queryClient.invalidateQueries({
-        queryKey: ['DetailCard'],
-      });
+  const { mutate: toggleLikeMutation } = useMutation({
+    mutationFn: async (newLiked: boolean) => {
+      return newLiked
+        ? authAxiosInstance.post(`articles/${articleId}/like`)
+        : authAxiosInstance.delete(`articles/${articleId}/like`);
     },
-  });
+    onMutate: async (newLiked) => {
+      await queryClient.cancelQueries({ queryKey: ['DetailCard', articleId] });
 
-  // 좋아요 취소
-  const unlikeMutation = useMutation({
-    mutationFn: () => authAxiosInstance.delete(`articles/${articleId}/like`),
-    onSuccess: () => {
-      setLikedPost(false);
-      // 필요시 쿼리 무효화나 업데이트 처리
-      queryClient.invalidateQueries({
-        queryKey: ['DetailCard'],
+      const previousData = queryClient.getQueryData<{
+        isLiked: boolean;
+        likeCount: number;
+      }>(['DetailCard', articleId]);
+
+      queryClient.setQueryData(['DetailCard', articleId], (oldData: any) => {
+        if (!oldData) return oldData;
+        return {
+          ...oldData,
+          isLiked: newLiked,
+          likeCount: newLiked ? oldData.likeCount + 1 : oldData.likeCount - 1,
+        };
       });
+
+      return { previousData };
+    },
+    onError: (_error, _newLiked, context) => {
+      if (context?.previousData) {
+        queryClient.setQueryData(
+          ['DetailCard', articleId],
+          context.previousData
+        );
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['DetailCard', articleId] });
     },
   });
 
   const handleAnimation = () => {
     setIsVisible(true);
-
     setTimeout(() => {
       setIsVisible(false);
     }, 1000);
   };
 
   const toggleLike = () => {
-    if (likedPost) {
-      unlikeMutation.mutate();
-    } else {
-      likeMutation.mutate();
-      handleAnimation();
-    }
+    const newLiked = !isLiked;
+    toggleLikeMutation(newLiked);
+    if (newLiked) handleAnimation();
   };
 
   return (
     <>
       <button onClick={toggleLike} type="button">
-        {likedPost ? <HertRedIcon /> : <HeartIcon />}
+        {isLiked ? <HertRedIcon /> : <HeartIcon />}
       </button>
+      <span className="text-slate-400">{likeCount}</span>
       <AnimatePresence>
         {isVisible && (
           <motion.div

@@ -119,9 +119,6 @@ export default function DetailCard() {
             </div>
             <div className="z-20 flex items-center gap-1">
               <Heart articleId={data?.id} />
-              <span className="text-xs-regular text-slate-400 md:text-md-medium">
-                {data?.likeCount}
-              </span>
             </div>
           </div>
         </SlideInMotion>

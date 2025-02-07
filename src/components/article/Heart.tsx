@@ -1,6 +1,6 @@
-import { useDetailCard } from '@hooks/article/useCommentAdd';
 import { authAxiosInstance } from '@libs/axios/axiosInstance';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { Article } from '@/src/types/article/ArticleType';
 import Image from 'next/image';
 import HeartIcon from 'public/icons/heart.svg';
 import HertRedIcon from 'public/icons/heartRed.svg';
@@ -9,17 +9,17 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 interface HeartProps {
   articleId: number | undefined;
+  isLiked?: boolean;
+  likeCount?: number;
 }
 
-export default function Heart({ articleId }: HeartProps) {
+export default function Heart({
+  articleId,
+  isLiked = false,
+  likeCount = 0,
+}: HeartProps) {
   const queryClient = useQueryClient();
   const [isVisible, setIsVisible] = useState(false);
-  const { data } = useDetailCard({
-    articleId: Number(articleId),
-  });
-
-  const isLiked = data?.isLiked ?? false;
-  const likeCount = data?.likeCount ?? 0;
 
   const { mutate: toggleLikeMutation } = useMutation({
     mutationFn: async (newLiked: boolean) => {
@@ -35,14 +35,17 @@ export default function Heart({ articleId }: HeartProps) {
         likeCount: number;
       }>(['DetailCard', articleId]);
 
-      queryClient.setQueryData(['DetailCard', articleId], (oldData: any) => {
-        if (!oldData) return oldData;
-        return {
-          ...oldData,
-          isLiked: newLiked,
-          likeCount: newLiked ? oldData.likeCount + 1 : oldData.likeCount - 1,
-        };
-      });
+      queryClient.setQueryData<Article>(
+        ['DetailCard', articleId],
+        (oldData) => {
+          if (!oldData) return oldData;
+          return {
+            ...oldData,
+            isLiked: newLiked,
+            likeCount: newLiked ? oldData.likeCount + 1 : oldData.likeCount - 1,
+          };
+        }
+      );
 
       return { previousData };
     },

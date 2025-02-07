@@ -118,7 +118,11 @@ export default function DetailCard() {
               </span>
             </div>
             <div className="z-20 flex items-center gap-1">
-              <Heart articleId={data?.id} />
+              <Heart
+                articleId={data?.id}
+                isLiked={data?.isLiked}
+                likeCount={data?.likeCount}
+              />
             </div>
           </div>
         </SlideInMotion>

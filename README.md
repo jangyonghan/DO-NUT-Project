@@ -18,8 +18,6 @@
 <div align="right">
 <h3>배포 사이트</h3>
 https://main-donut-seven.vercel.app/ 🔗
-<h3>배포 App</h3>
-구글 플레이스토어 테스트 중, 추가 예정 🔗
 </div>
 
 <br>

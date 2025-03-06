@@ -30,7 +30,7 @@ interface Card {
 }
 
 export default function ArticleCard({ keyword }: ArticleCardProps) {
-  const [orderBy, setorderBy] = useState('recent');
+  const [orderBy, setOrderBy] = useState('recent');
   const { query } = useRouter();
   const {
     data: cards,
@@ -44,18 +44,18 @@ export default function ArticleCard({ keyword }: ArticleCardProps) {
 
   useEffect(() => {
     if (query.orderBy) {
-      setorderBy(query.orderBy as string);
+      setOrderBy(query.orderBy as string);
     } else {
-      setorderBy('recent');
+      setOrderBy('recent');
     }
   }, [query.orderBy]);
 
-  const handleDetalCard = (id: number) => {
+  const handleDetailCard = (id: number) => {
     router.push(`article/${id}`);
   };
 
   const handleSelect = (value: string) => {
-    setorderBy(value);
+    setOrderBy(value);
     router.push({
       pathname: router.pathname,
       query: { ...query, orderBy: value },
@@ -91,7 +91,7 @@ export default function ArticleCard({ keyword }: ArticleCardProps) {
                     <article className=" h-[178px] w-full rounded-xl border border-background-tertiary bg-background-secondary">
                       <div
                         className="mx-4 mb-4 mt-6 cursor-pointer"
-                        onClick={() => handleDetalCard(card.id)}
+                        onClick={() => handleDetailCard(card.id)}
                       >
                         <div className=" mb-10 flex justify-between">
                           <div className="flex-1 overflow-hidden pr-4">
